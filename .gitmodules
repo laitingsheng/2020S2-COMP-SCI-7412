@@ -1,0 +1,3 @@
+[submodule "assignment2/script"]
+	path = assignment2/script
+	url = git@github.com:laitingsheng/Automated-VCC-Finding-Script.git

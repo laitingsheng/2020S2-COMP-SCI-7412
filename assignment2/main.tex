@@ -93,4 +93,37 @@ Improved Fix: 86e0f69030440c82ae82e3b2f3bc11c1f54022f1
 
 Comments: The bug in the original version can be triggered by uploading a malicious PHP code as the payload when changing the user profile avatar. This is due to lacking a way to filter out files based on the file extensions, even though it eventually converts all files to PNG the format. The fix is quite easy, as it now filters out files according to their suffix. However, I don't think this is enough as attacker might be able to change the suffix of a file from \mintinline{text}|.php| to \mintinline{text}|.png| or something similar before uploading the file to bypass the checking process. It should perform extra check to determine whether an uploaded file is indeed an image or not. Fortunately, the issue I mentioned has already been fixed in a future commit by further checking its actual MIME type. However, this is just an improvement based on the original fix, and the newer fix is not linked to the CVE ID anymore.
 
+\section{Part 2}
+
+For task 3 and 5 and part of 7, I didn't attempt to do these tasks manually as I don't want to trace those commit histories, so I wrote the script from the start of this part and there is no screenshot can be provided as the steps. However, the generated raw data is available in the file \mintinline{text}|output.yaml| in the GitHub repository\footnote{\url{https://github.com/laitingsheng/Automated-VCC-Finding-Script}}. The link to the GitHub repository is also in the comment of the submission. The data summarised is in the Excel file submitted alongside with this report.
+
+For task 3, the steps are incorrect, since \mintinline{text}|git blame| will not be able to show any modification as clearly indicated on git official document\footnote{\url{https://git-scm.com/docs/git-blame}}. The correct step should be:
+\begin{enumerate}
+  \item \mintinline{text}|git show| the revision and it will output the differences between the given commit and its parent commit.
+  \item Following the paper (\textit{VCCFinder: Finding Potential Vulnerabilities in Open-Source Projects to Assist Code Audits}\footnote{\url{https://dl.acm.org/doi/10.1145/2810103.2813604}}), it can generate a list of the lines to be blamed.
+  \item \mintinline{text}|git blame| those lines with respects to the parent commits. This can correctly blame those lines which were deleted in the fix commit.
+  \item Summarise the result and select the commit with the highest number of blames.
+\end{enumerate}
+
+For task 4, from the official git document\footnote{\url{https://git-scm.com/docs/git-blame}}:
+\begin{itemize}
+  \item \mintinline{text}|-w| will ignore all changed in whitespaces, thus adding indentations or blank lines will not be considered as an author of a line of code.
+  \item \mintinline{text}|-M| will try to identify the deleted blocks of lines and retain their original blames, and this differs from the original behaviour.
+  \item \mintinline{text}|-C| will try to include changes copied or moved from other files in the same commit in addition to \mintinline{text}|-M|. Repeating it twice will also consider the initial commits which creates those files. When it is given three times, it will search over all commits in the current repository.
+\end{itemize}
+
+In the script, I only use the \mintinline{text}|-M| option as chages in whitespaces are negligible, and fortunately, this option did not give a different result. Another important reason I use this option is that, unlike Python, spacing in Java (the language used in both two reposiories) is just for formatting and it doesn't have any special meanings to the syntax. For both \mintinline{text}|-M| and \mintinline{text}|-C| options, I don't think it's appropriate for identifying the VCC. The commit which did the moving or copying should, at least, be blamed to be a VCC if the moving or copying indeed causes the vulnerability.
+
+An interesting side note is that due to the nature of Python, it is impossible to specify repeating terminal options by using the git command delegate in GitPython. When I did test those parameters with native console, I was surprised by the output of \mintinline{text}|git blame| as it output so many irrelevant commits which didn't even modify the specified files.
+
+For task 7, it is easy to get the answer from the generated raw data. However, an interesting point is for both repositories, though I wrote that the author of the fixing commit and VCC are not the same (because the author emails are different), I suspect that they are essentially the same person with different commiting configurations. I can't further confirm this as they didn't sign the commit, though GPG signature is just another guideline anyway.
+
+By tracing the commit on GitHub, it is obvious that VCC and the commit are not in the same day for both repositories.
+
+The first repository fix the issue as someone submit and create a pull request to the project's own Gerrit instance, and the project team has quickly responded to the merge request (in the same day). This issue was not identified before as this problem relates to the default behaviour of JavaX XML parser, and there isn't any reports with respect to the same problems before. Interestingly, I can't find any demonstration of attack, which means this is just a potential vulnerability idnetified by the developers. Therefore, I think it's reasonable that the fixing commit comes more than two years later than the VCC.
+
+The second repository has a quite similar circumstance. The project team indeed quickly respond to the vulnerability report. There is no previous reports on the vulnerability prior to this formal vulnerability report.
+
+I've verified the VCCs manually to ensure that they are correctly identified by the heuristic.
+
 \end{document}
